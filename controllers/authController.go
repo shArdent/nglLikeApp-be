@@ -2,12 +2,17 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/jmoiron/sqlx"
 	"github.com/nglLike/models"
 	"golang.org/x/crypto/bcrypt"
 )
+
+const secretKey string = "apacb"
 
 type AuthController struct {
 	DB *sqlx.DB
@@ -47,6 +52,7 @@ func (ac *AuthController) LoginHandler(c *gin.Context) {
 	var userData models.LoginPayload
 	if err := c.BindJSON(&userData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	var user models.User
@@ -58,8 +64,24 @@ func (ac *AuthController) LoginHandler(c *gin.Context) {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userData.Password)); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Username atau password anda salah"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email atau password anda salah"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "data": user})
+
+	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Issuer:    strconv.Itoa(user.Id),
+		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+	})
+
+	token, err := claims.SignedString([]byte(secretKey))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	expiredAt := time.Now().Add(time.Hour * 24).Unix()
+
+	c.SetCookie("jwt", token, int(expiredAt), "/", "localhost", false, true)
+
+	c.JSON(http.StatusOK, gin.H{"status": true, "data": []string{}, "message": "Berhasil login"})
 }
