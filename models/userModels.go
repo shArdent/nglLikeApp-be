@@ -1,20 +1,22 @@
 package models
 
 type User struct {
-	Id        int     `json:"id"`
-	Username  string  `json:"username"`
-	Name      *string `json:"name"`
-	Email     string  `json:"email"`
-	Password  string  `json:"password"`
-	Bio       *string `json:"bio"`
-	CreatedAt string  `json:"created_at"`
-	UpdatedAt string  `json:"updated_at"`
+	Id        int     `db:"id"`
+	Username  *string `db:"username"`
+	Name      *string `db:"name"`
+	Email     string  `db:"email"`
+	Password  string  `db:"password"`
+	Bio       *string `db:"bio"`
+	CreatedAt string  `db:"created_at"`
+	UpdatedAt string  `db:"updated_at"`
 }
 
 type NewUserPayload struct {
-	Username string  `json:"username"`
-	Name     *string `json:"name"`
-	Email    string  `json:"email"`
-	Password string  `json:"password"`
-	Bio      *string `json:"bio"`
+	Email    string `db:"email"`
+	Password string `db:"password"`
+}
+
+type LoginPayload struct {
+	Email    string `db:"email"`
+	Password string `db:"password"`
 }
